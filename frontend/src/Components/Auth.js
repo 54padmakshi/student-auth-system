@@ -13,41 +13,43 @@ const Auth = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
 
   // Handle Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    console.log("📩 Submitting Form:", formData);
-  
-    try {
-      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+    setError(""); // Reset error before submitting
 
-      const endpoint = isRegister ? "/auth/register" : "/auth/login";
-      const { data } = await axios.post(`${API_URL}${endpoint}`, formData);
-  
-      console.log("✅ Login Response:", data);
-  
+    const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+    const endpoint = isRegister ? "/auth/register" : "/auth/login";
+
+    // ✅ Corrected userData based on Register/Login
+    const userData = isRegister
+      ? { name: formData.name, email: formData.email, password: formData.password }
+      : { email: formData.email, password: formData.password };
+
+    console.log("📩 Submitting Form:", userData);
+
+    try {
+      const { data } = await axios.post(`${API_URL}${endpoint}`, userData, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      console.log("✅ API Response:", data);
+
       if (!isRegister) {
-        localStorage.setItem("token", data.token);  
+        localStorage.setItem("token", data.token); // Store JWT token
         console.log("💾 Token stored:", data.token);
-  
-        // ✅ Use navigate without full page reload
-        if (!isRegister) {
-          setTimeout(() => navigate("/dashboard"), 0); // Prevents immediate remount
-        }
-        
+        setTimeout(() => navigate("/dashboard"), 0); // Prevents immediate remount
       } else {
         alert("Registration successful. Please login.");
         setIsRegister(false);
       }
     } catch (err) {
+      console.error("❌ API Error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Something went wrong");
     }
   };
-  
-  
+
   useEffect(() => {
     console.log("✅ Auth Component Mounted");
     return () => console.log("❌ Auth Component Unmounted");
@@ -58,12 +60,35 @@ const Auth = () => {
       <h2>{isRegister ? "Register" : "Login"}</h2>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <form onSubmit={handleSubmit}>
-        {isRegister && <input type="text" name="name" placeholder="Name" onChange={handleChange} required />}
-        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+        {isRegister && (
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+        )}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+        />
         <button type="submit">{isRegister ? "Sign Up" : "Login"}</button>
       </form>
-      <p onClick={() => setIsRegister(!isRegister)}>
+      <p onClick={() => setIsRegister(!isRegister)} style={{ cursor: "pointer", color: "blue" }}>
         {isRegister ? "Already have an account? Login" : "Don't have an account? Register"}
       </p>
     </div>

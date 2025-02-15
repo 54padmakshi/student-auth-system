@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 // Initialize Express App
 const app = express();
@@ -57,15 +58,25 @@ app.post("/api/auth/login", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user || user.password !== password) {
+
+     // ✅ If user doesn't exist
+    if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // ✅ Compare hashed password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+     // ✅ Generate JWT Token
+
     const token = jwt.sign({ name: user.name, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ token });
+    return res.json({ token });
   } catch (error) {
     console.error("❌ Server Error:", error);
-    res.status(500).json({ message: "Error logging in" });
+    return res.status(500).json({ message: "Error logging in" });
   }
 });
 

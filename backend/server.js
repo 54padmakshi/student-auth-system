@@ -71,7 +71,7 @@ app.post("/api/auth/login", async (req, res) => {
 
 // Protected Route (Get User)
 app.get("/api/auth/user", (req, res) => {
-  res.send("Backend is running successfully!");
+ 
   const token = req.headers.authorization?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
@@ -81,6 +81,7 @@ app.get("/api/auth/user", (req, res) => {
   } catch (err) {
     res.status(401).json({ message: "Invalid token" });
   }
+  res.send("Backend is running successfully!");
 });
 
 // Start Server

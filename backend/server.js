@@ -100,11 +100,11 @@ app.get("/api/auth/user", (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    res.json({ user: { name: decoded.name, email: decoded.email } });
+     return res.json({ user: { name: decoded.name, email: decoded.email } });
   } catch (err) {
-    res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({ message: "Invalid token" });
   }
-  res.send("Backend is running successfully!");
+  
 });
 
 // Start Server

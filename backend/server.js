@@ -29,22 +29,28 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model("User", UserSchema);
 
-// Register Route
+// Register Route----(Fixed: Hash password before saving)
 app.post("/api/auth/register", async (req, res) => {
   const { name, email, password } = req.body;
   try {
     const userExists = await User.findOne({ email });
     if (userExists) return res.status(400).json({ message: "User already exists" });
 
-    const newUser = new User({ name, email, password });
+     // 🔹 Hash password using bcryptjs before saving
+     const salt = await bcrypt.genSalt(10);
+     const hashedPassword = await bcrypt.hash(password, salt);
+
+     const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
+
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
+    console.error("❌ Error registering user:", error);
     res.status(500).json({ message: "Error registering user" });
   }
 });
 
-// Login Route
+// Login Route---(Uses bcryptjs for password comparison)
 app.post("/api/auth/login", async (req, res) => {
 
   console.log("Received Login Request:", req.body); // ✅ Log request body

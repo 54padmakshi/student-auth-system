@@ -37,7 +37,7 @@ app.post("/api/auth/register", async (req, res) => {
     if (userExists) return res.status(400).json({ message: "User already exists" });
 
      // 🔹 Hash password using bcryptjs before saving
-     const salt = await bcrypt.genSalt(10);
+     const salt = await bcrypt.genSalt(8);
      const hashedPassword = await bcrypt.hash(password, salt);
 
      const newUser = new User({ name, email, password: hashedPassword });
@@ -59,27 +59,32 @@ app.post("/api/auth/login", async (req, res) => {
 
     // 🔴 Check if email & password are missing
   if (!email || !password) {
+    console.log("❌ Missing email or password");
     return res.status(400).json({ message: "Email and password are required" });
   }
 
 
   try {
+    console.log("🔍 Searching for user...");
     const user = await User.findOne({ email });
 
      // ✅ If user doesn't exist
     if (!user) {
+      console.log("❌ User not found");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // ✅ Compare hashed password
+    console.log("🔍 Comparing passwords...");
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
      // ✅ Generate JWT Token
-
+     console.log("✅ Password match! Generating token...");
     const token = jwt.sign({ name: user.name, email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    console.log("✅ Sending response...");
     return res.json({ token });
   } catch (error) {
     console.error("❌ Server Error:", error);
